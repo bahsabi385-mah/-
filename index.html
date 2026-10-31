@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قوة حماية الشركات النفطية - المنطقة العسكرية الثانية</title>
     
-    <!-- ربط ملف الـ Manifest الخارجي -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -66,6 +65,26 @@
         <input type="file" id="importFile" style="display:none" onchange="importDataFromFile(event)">
     </div>
 
+    <!-- لوحة التحكم الجماعي للشفتات الشاملة لكل السرية -->
+    <div class="card no-print" style="background: #eef2f5; border: 1px solid #cbd5e1;">
+        <div class="card-title" style="color: #2c3e50; margin-bottom: 8px;">إدارة الشفتات الجماعية لعموم السرية</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px;">اختر الشفت لتعديل حالته لعموم السرية:</label>
+                <select id="global-shift-select" style="font-size:12px; padding:6px; background:white;">
+                    <option value="الشفت الأول">الشفت الأول</option>
+                    <option value="الشفت الثاني">الشفت الثاني</option>
+                    <option value="الشفت الثالث">الشفت الثالث</option>
+                    <option value="دوام إداري">دوام إداري</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="action-btn" style="background:#27ae60; font-size:11px; padding:8px; flex:1;" onclick="setGlobalShiftStatus('موجود')">تحويل الشفت موجود (للكل)</button>
+                <button type="button" class="action-btn" style="background:#2980b9; font-size:11px; padding:8px; flex:1;" onclick="setGlobalShiftStatus('إجازة رسمية')">تحويل الشفت إجازة (للكل)</button>
+            </div>
+        </div>
+    </div>
+
     <div class="stats-grid">
         <div class="stat-card" style="border-color: #3498db;"><h3>القوة الكلية</h3><div class="number" id="st-total">0</div></div>
         <div class="stat-card" style="border-color: #27ae60;"><h3>الموجود</h3><div class="number" id="st-present">0</div></div>
@@ -97,7 +116,7 @@
             <div class="form-group"><label>إلى تاريخ:</label><input type="date" id="history-end-date" onchange="renderDetailedReport()"></div>
         </div>
         <div id="loc-stats-section" style="margin-top: 15px; margin-bottom: 15px;">
-            <h4 style="font-size: 12px; color: #2c3e50; margin-bottom: 5px;">إحصائيات القيادة والمواقع:</h4>
+            <h4 style="font-size: 12px; color: #2c3e50; margin-bottom: 5px;">إحصائيات القيادة والمواكب:</h4>
             <div style="overflow-x:auto;"><table class="loc-table"><thead><tr><th>الموقع</th><th>التصنيف</th><th>القوة</th><th>موجود</th><th>إجازة</th><th>مأذونية</th><th>مرضية</th><th>غياب</th><th>فرار</th></tr></thead><tbody id="locations-stats-body"></tbody></table></div>
         </div>
         <div style="margin-top: 10px; display: none;" id="detailed-report-container"></div>
@@ -110,9 +129,10 @@
             <div class="form-group"><label>اسم الموقع:</label><input type="text" id="new-loc-name"></div>
             <div class="form-group"><label>التصنيف:</label><select id="new-loc-platoon"><option value="قيادة">قيادة</option><option value="الفصيلة الأولى">الفصيلة الأولى</option><option value="الفصيلة الثانية">الفصيلة الثانية</option><option value="الفصيلة الثالثة">الفصيلة الثالثة</option></select></div>
             <div class="form-group"><label>عدد القوة الكلية:</label><input type="number" id="new-loc-total" value="0"></div>
-            <div class="form-group"><label>عدد الموجود الأساسي:</label><input type="number" id="new-loc-present" value="0"></div>
-            <div class="form-group"><label>عدد الإجازة الأساسي:</label><input type="number" id="new-loc-leave" value="0"></div>
-            <button class="action-btn" id="save-loc-btn" onclick="saveNewLocation()">حفظ وتحديث</button>
+            <div class="form-group"><label>عدد الشفت الأول:</label><input type="number" id="new-loc-shift1" value="0"></div>
+            <div class="form-group"><label>عدد الشفت الثاني:</label><input type="number" id="new-loc-shift2" value="0"></div>
+            <div class="form-group"><label>عدد الشفت الثالث:</label><input type="number" id="new-loc-shift3" value="0"></div>
+            <button type="button" class="action-btn" id="save-loc-btn" onclick="saveNewLocation()">حفظ وتحديث</button>
         </div>
         <div id="add-mem-modal" style="display:none; background:#eef2f7; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #cbd5e1;">
             <h4 style="font-size:13px; margin-bottom:6px;" id="modal-title-text">تسجيل فرد جديد</h4>
@@ -125,7 +145,7 @@
             <div class="form-group"><label>الحالة:</label><select id="modal-mem-status"><option value="موجود">موجود</option><option value="إجازة رسمية">إجازة رسمية</option><option value="مأذونية">مأذونية</option><option value="مرضية">مرضية</option><option value="غياب">غياب</option><option value="فرار">فرار</option></select></div>
             <div class="form-group"><label>تاريخ الحالة:</label><input type="date" id="modal-mem-date"></div>
             <div class="form-group"><label>السبب / الملاحظة:</label><textarea id="modal-mem-reason" rows="2"></textarea></div>
-            <div style="display:flex; gap:6px;"><button class="action-btn" style="background:#27ae60; flex:1;" onclick="saveModalMember()">حفظ</button><button class="action-btn" style="background:#64748b; flex:1;" onclick="closeModalMember()">إلغاء</button></div>
+            <div style="display:flex; gap:6px;"><button type="button" class="action-btn" style="background:#27ae60; flex:1;" onclick="saveModalMember()">حفظ</button><button type="button" class="action-btn" style="background:#64748b; flex:1;" onclick="closeModalMember()">إلغاء</button></div>
         </div>
         <div id="sites-buttons-container"></div>
     </div>
@@ -134,6 +154,9 @@
         let locations = JSON.parse(localStorage.getItem('sec_hybrid_locs_v2')) || [];
         let members = JSON.parse(localStorage.getItem('sec_hybrid_mems_v2')) || [];
         let historyLogs = JSON.parse(localStorage.getItem('sec_hybrid_logs_v2')) || [];
+        // تخزين حالة الشفتات الجماعية لكل موقع إذا لم تسجل أسماء
+        let globalShiftStatuses = JSON.parse(localStorage.getItem('sec_hybrid_global_shifts_v2')) || {};
+        
         const platoonOrder = { 'قيادة': 1, 'الفصيلة الأولى': 2, 'الفصيلة الثانية': 3, 'الفصيلة الثالثة': 4 };
 
         function getSortedLocations() { 
@@ -149,10 +172,11 @@
             localStorage.setItem('sec_hybrid_locs_v2', JSON.stringify(locations)); 
             localStorage.setItem('sec_hybrid_mems_v2', JSON.stringify(members)); 
             localStorage.setItem('sec_hybrid_logs_v2', JSON.stringify(historyLogs)); 
+            localStorage.setItem('sec_hybrid_global_shifts_v2', JSON.stringify(globalShiftStatuses));
         }
 
         function exportDataToFile() { 
-            const data = { locations, members, historyLogs }; 
+            const data = { locations, members, historyLogs, globalShiftStatuses }; 
             const jsonStr = JSON.stringify(data, null, 2); 
             const blob = new Blob([jsonStr], { type: "application/json" }); 
             const url = URL.createObjectURL(blob); 
@@ -171,7 +195,8 @@
                     const data = JSON.parse(e.target.result); 
                     locations = data.locations; 
                     members = data.members; 
-                    historyLogs = data.historyLogs; 
+                    historyLogs = data.historyLogs || []; 
+                    globalShiftStatuses = data.globalShiftStatuses || {};
                     saveData(); 
                     refreshAll(); 
                     alert("تم الاسترجاع بنجاح!"); 
@@ -187,21 +212,48 @@
             window.print(); 
         }
 
+        // دالة الحساب الدقيق التي تدمج أعداد الشفتات مع الحالات حتى بدون تسجيل أسماء
         function getCalculatedCounts(locName) { 
             const loc = locations.find(l => l.name === locName); 
             if (!loc) return { p:0, l:0, m:0, s:0, a:0, r:0 }; 
+            
             const locMems = members.filter(m => m.location === locName); 
+            
+            let s1 = parseInt(loc.shift1) || 0;
+            let s2 = parseInt(loc.shift2) || 0;
+            let s3 = parseInt(loc.shift3) || 0;
+
             let mCount = locMems.filter(m => m.status === 'مأذونية').length; 
             let sCount = locMems.filter(m => m.status === 'مرضية').length; 
             let aCount = locMems.filter(m => m.status === 'غياب').length; 
             let rCount = locMems.filter(m => m.status === 'فرار').length; 
-            let extraLeave = locMems.filter(m => m.status === 'إجازة رسمية').length; 
-            let finalLeave = (parseInt(loc.leave) || 0) + extraLeave; 
-            let explicitPresentMems = locMems.filter(m => m.status === 'موجود').length; 
-            let basePresent = parseInt(loc.present) || 0; 
-            let finalPresent = basePresent - (mCount + sCount + aCount + rCount); 
-            if (finalPresent < 0) finalPresent = 0; 
-            if (locMems.length > 0 && basePresent === 0) finalPresent = explicitPresentMems; 
+            let leaveCount = locMems.filter(m => m.status === 'إجازة رسمية').length; 
+            let presentCount = locMems.filter(m => m.status === 'موجود').length;
+
+            // فحص حالة الشفتات الجماعية المخزنة لهذا الموقع إذا لم تسجل أسماء
+            let locShiftsStatus = globalShiftStatuses[locName] || {};
+            
+            let shift1Leave = (locShiftsStatus['الشفت الأول'] === 'إجازة رسمية') ? s1 : 0;
+            let shift2Leave = (locShiftsStatus['الشفت الثاني'] === 'إجازة رسمية') ? s2 : 0;
+            let shift3Leave = (locShiftsStatus['الشفت الثالث'] === 'إجازة رسمية') ? s3 : 0;
+            
+            let totalLeaveFromShifts = shift1Leave + shift2Leave + shift3Leave;
+            
+            let finalLeave = leaveCount > 0 ? leaveCount : totalLeaveFromShifts;
+            let totalShift = s1 + s2 + s3;
+
+            let finalPresent = totalShift - (finalLeave + mCount + sCount + aCount + rCount);
+            if (finalPresent < 0) finalPresent = 0;
+
+            if (locMems.length > 0) {
+                // إذا وُجدت أسماء، نعتمد الحساب الدقيق بناءً على الأسماء والحالات المحددة
+                let explicitLeave = locMems.filter(m => m.status === 'إجازة رسمية').length;
+                let explicitPresent = locMems.filter(m => m.status === 'موجود').length;
+                finalLeave = explicitLeave;
+                finalPresent = totalShift - (explicitLeave + mCount + sCount + aCount + rCount);
+                if (finalPresent < 0) finalPresent = explicitPresent;
+            }
+
             return { p: finalPresent, l: finalLeave, m: mCount, s: sCount, a: aCount, r: rCount }; 
         }
 
@@ -254,7 +306,7 @@
                 box.className = 'site-box'; 
                 const boxId = `names-loc-${loc.id}`; 
                 const menuId = `menu-${loc.id}`; 
-                box.innerHTML = `<div class="site-header"><span>${loc.name} <small>(${loc.platoon})</small></span><div style="display:flex; align-items:center; gap:8px;"><span>قوة: ${loc.totalForce}</span><div class="menu-container"><button class="menu-btn" onclick="toggleMenu('${menuId}')">⋮</button><div id="${menuId}" class="dropdown-menu"><button class="members-opt" onclick="toggleSiteMembers('${boxId}', '${loc.name}')">👥 إدارة الأسماء</button><button class="add-mem-opt" onclick="openAddMemberModal('${loc.name}')">➕ إضافة فرد</button><button class="edit-opt" onclick="editLocation(${loc.id})">✏️ تعديل الموقع</button><button class="del-opt" onclick="deleteLocation(${loc.id})">🗑️ حذف الموقع</button></div></div></div></div><div class="status-buttons"><button class="st-btn btn-p" onclick="showStatusNames('${boxId}', '${loc.name}', 'موجود')">موجود (${c.p})</button><button class="st-btn btn-l" onclick="showStatusNames('${boxId}', '${loc.name}', 'إجازة رسمية')">إجازة (${c.l})</button><button class="st-btn btn-m" onclick="showStatusNames('${boxId}', '${loc.name}', 'مأذونية')">مأذونية (${c.m})</button><button class="st-btn btn-s" onclick="showStatusNames('${boxId}', '${loc.name}', 'مرضية')">مرضية (${c.s})</button><button class="st-btn btn-a" onclick="showStatusNames('${boxId}', '${loc.name}', 'غياب')">غياب (${c.a})</button><button class="st-btn btn-r" onclick="showStatusNames('${boxId}', '${loc.name}', 'فرار')">فرار (${c.r})</button></div><div id="${boxId}" class="names-display"></div>`; 
+                box.innerHTML = `<div class="site-header"><span>${loc.name} <small>(${loc.platoon})</small></span><div style="display:flex; align-items:center; gap:8px;"><span>قوة: ${loc.totalForce}</span><div class="menu-container"><button type="button" class="menu-btn" onclick="toggleMenu('${menuId}')">⋮</button><div id="${menuId}" class="dropdown-menu"><button type="button" class="members-opt" onclick="toggleSiteMembers('${boxId}', '${loc.name}')">👥 إدارة الأسماء</button><button type="button" class="add-mem-opt" onclick="openAddMemberModal('${loc.name}')">➕ إضافة فرد</button><button type="button" class="edit-opt" onclick="editLocation(${loc.id})">✏️ تعديل الموقع</button><button type="button" class="del-opt" onclick="deleteLocation(${loc.id})">🗑️ حذف الموقع</button></div></div></div></div><div class="status-buttons"><button type="button" class="st-btn btn-p" onclick="showStatusNames('${boxId}', '${loc.name}', 'موجود')">موجود (${c.p})</button><button type="button" class="st-btn btn-l" onclick="showStatusNames('${boxId}', '${loc.name}', 'إجازة رسمية')">إجازة (${c.l})</button><button type="button" class="st-btn btn-m" onclick="showStatusNames('${boxId}', '${loc.name}', 'مأذونية')">مأذونية (${c.m})</button><button type="button" class="st-btn btn-s" onclick="showStatusNames('${boxId}', '${loc.name}', 'مرضية')">مرضية (${c.s})</button><button type="button" class="st-btn btn-a" onclick="showStatusNames('${boxId}', '${loc.name}', 'غياب')">غياب (${c.a})</button><button type="button" class="st-btn btn-r" onclick="showStatusNames('${boxId}', '${loc.name}', 'فرار')">فرار (${c.r})</button></div><div id="${boxId}" class="names-display"></div>`; 
                 container.appendChild(box); 
             }); 
         }
@@ -275,17 +327,43 @@
             } 
         }
 
+        // دالة تحويل الشفت لعموم السرية وتحديث الحالات فوراً حتى بدون أسماء
+        function setGlobalShiftStatus(newStatus) {
+            const shiftVal = document.getElementById('global-shift-select').value;
+            
+            // تحديث حالة الشفت لكل موقع في الذاكرة الجماعية
+            locations.forEach(loc => {
+                if (!globalShiftStatuses[loc.name]) {
+                    globalShiftStatuses[loc.name] = {};
+                }
+                globalShiftStatuses[loc.name][shiftVal] = newStatus;
+            });
+
+            // وتحديث الأفراد المسجلين إن وجدوا
+            members.forEach(m => {
+                if (m.shift === shiftVal) {
+                    m.status = newStatus;
+                }
+            });
+            
+            saveData();
+            refreshAll();
+            alert(`تم بنجاح تحويل حالة أفراد (${shiftVal}) في عموم السرية إلى (${newStatus})!`);
+        }
+
         function toggleSiteMembers(boxId, locName) { 
             const displayDiv = document.getElementById(boxId); 
             const locMembers = members.filter(m => m.location === locName); 
             displayDiv.style.display = displayDiv.style.display === 'block' ? 'none' : 'block'; 
-            let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><b>إدارة أفراد (${locName})</b><button class="action-btn" style="background:#27ae60;" onclick="openAddMemberModal('${locName}')">➕ جديد</button></div>`; 
+            
+            let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><b>إدارة أفراد (${locName})</b><button type="button" class="action-btn" style="background:#27ae60;" onclick="openAddMemberModal('${locName}')">➕ جديد</button></div>`; 
+            
             if (locMembers.length === 0) { 
-                html += `<p style="color:#7f8c8d;">لا توجد أسماء</p>`; 
+                html += `<p style="color:#7f8c8d;">لا توجد أسماء مسجلة بعد (البيانات محسوبة تلقائياً من الشفتات)</p>`; 
             } else { 
                 html += `<ul>`; 
                 locMembers.forEach(m => { 
-                    let recallBtnHtml = (m.status === 'إجازة رسمية') ? `<button class="recall-btn" onclick="recallFromLeave(${m.id}, '${boxId}', '${locName}')">استدعاء</button>` : ''; 
+                    let recallBtnHtml = (m.status === 'إجازة رسمية') ? `<button type="button" class="recall-btn" onclick="recallFromLeave(${m.id}, '${boxId}', '${locName}')">استدعاء</button>` : ''; 
                     html += `<li><b>[${m.rank}] ${m.name}</b> (${m.shift}) - ${m.status}<br><small>${m.job} | ${m.phone}</small>
                         <div style="display:flex; gap:4px; margin-top:6px; align-items:center; flex-wrap:wrap;">
                             <select onchange="updateMemberStatusInline(${m.id}, this.value, '${boxId}', '${locName}')" style="font-size:11px; padding:3px;">
@@ -298,13 +376,14 @@
                             </select>
                             ${recallBtnHtml}
                             <input type="text" value="${m.reason || ''}" placeholder="اكتب ملاحظة..." style="font-size:11px; padding:3px; flex:1; min-width:100px; border:1px solid #ccc; border-radius:3px;" onchange="updateMemberReasonInline(${m.id}, this.value)">
-                            <button class="action-btn" onclick="openEditMemberModal(${m.id})">✏️</button>
-                            <button class="del-btn" onclick="deleteMember(${m.id}, '${boxId}', '${locName}')">حذف</button>
+                            <button type="button" class="action-btn" onclick="openEditMemberModal(${m.id})">✏️</button>
+                            <button type="button" class="del-btn" onclick="deleteMember(${m.id}, '${boxId}', '${locName}')">حذف</button>
                         </div>
                     </li>`; 
                 }); 
-                html += '</ul><button class="action-btn" style="background:#64748b; width:100%; margin-top:6px;" onclick="document.getElementById(\''+boxId+'\').style.display=\'none\'">إغلاق</button>'; 
+                html += '</ul>'; 
             } 
+            html += `<button type="button" class="action-btn" style="background:#64748b; width:100%; margin-top:6px;" onclick="document.getElementById('${boxId}').style.display='none'">إغلاق</button>`; 
             displayDiv.innerHTML = html; 
         }
 
@@ -354,9 +433,9 @@
                     html += `<li><b>- [${m.rank}] ${m.name}</b> (${m.shift})<br><small>${m.job} | ${m.phone}</small>${reasonDisplay}</li>`; 
                 }); 
             } else { 
-                html += `<li><small>لا يوجد</small></li>`; 
+                html += `<li><small>لا توجد أسماء مسجلة تفصيلياً (العدد محسوب تلقائياً من أعداد الشفتات)</small></li>`; 
             } 
-            html += '</ul><button class="action-btn" style="background:#64748b; width:100%;" onclick="document.getElementById(\''+boxId+'\').style.display=\'none\'">إغلاق</button>'; 
+            html += `</ul><button type="button" class="action-btn" style="background:#64748b; width:100%;" onclick="document.getElementById('${boxId}').style.display='none'">إغلاق</button>`; 
             displayDiv.innerHTML = html; 
         }
 
@@ -487,8 +566,9 @@
                 document.getElementById('new-loc-name').value = loc.name; 
                 document.getElementById('new-loc-platoon').value = loc.platoon; 
                 document.getElementById('new-loc-total').value = loc.totalForce; 
-                document.getElementById('new-loc-present').value = loc.present; 
-                document.getElementById('new-loc-leave').value = loc.leave; 
+                document.getElementById('new-loc-shift1').value = loc.shift1 || 0; 
+                document.getElementById('new-loc-shift2').value = loc.shift2 || 0; 
+                document.getElementById('new-loc-shift3').value = loc.shift3 || 0; 
                 document.getElementById('save-loc-btn').innerText = 'تحديث البيانات'; 
                 document.getElementById('add-loc-box').style.display = 'block'; 
             } 
@@ -500,6 +580,7 @@
                 if (loc) { 
                     members = members.filter(m => m.location !== loc.name); 
                     locations = locations.filter(l => l.id !== id); 
+                    delete globalShiftStatuses[loc.name];
                     saveData(); 
                     refreshAll(); 
                 } 
@@ -511,20 +592,24 @@
             const name = document.getElementById('new-loc-name').value; 
             const platoon = document.getElementById('new-loc-platoon').value; 
             const totalForce = parseInt(document.getElementById('new-loc-total').value) || 0; 
-            const present = parseInt(document.getElementById('new-loc-present').value) || 0; 
-            const leave = parseInt(document.getElementById('new-loc-leave').value) || 0; 
+            const shift1 = parseInt(document.getElementById('new-loc-shift1').value) || 0; 
+            const shift2 = parseInt(document.getElementById('new-loc-shift2').value) || 0; 
+            const shift3 = parseInt(document.getElementById('new-loc-shift3').value) || 0; 
+            
             if (!name) { alert('ادخل اسم الموقع'); return; } 
+            
             if (editId) { 
                 const loc = locations.find(l => l.id == editId); 
                 if (loc) { 
                     loc.name = name; 
                     loc.platoon = platoon; 
                     loc.totalForce = totalForce; 
-                    loc.present = present; 
-                    loc.leave = leave; 
+                    loc.shift1 = shift1; 
+                    loc.shift2 = shift2; 
+                    loc.shift3 = shift3; 
                 } 
             } else { 
-                locations.push({ id: Date.now(), name, platoon, totalForce, present, leave }); 
+                locations.push({ id: Date.now(), name, platoon, totalForce, shift1, shift2, shift3 }); 
             } 
             saveData(); 
             toggleAddLocation(); 
