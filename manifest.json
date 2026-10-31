@@ -1,0 +1,23 @@
+{
+  "name": "قوة حماية الشركات النفطية",
+  "short_name": "حصر القوة",
+  "description": "نظام إدارة المواقع والأفراد والسجلات التاريخية لقوة حماية الشركات النفطية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a252f",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
