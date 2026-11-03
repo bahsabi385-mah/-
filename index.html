@@ -44,12 +44,13 @@
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
         .action-btn { background: #2980b9; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
         .del-btn { background: #e74c3c; padding: 6px 10px; font-size: 11px; border-radius: 4px; color: white; border: none; cursor: pointer; font-weight: bold; }
-        .recall-btn { background: #c0392b; padding: 6px 10px; font-size: 11px; border-radius: 4px; color: white; border: none; font-weight: bold; cursor: pointer; }
         .backup-section { background: #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 8px; }
         .report-card-item { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
         .report-name { font-size: 13px; font-weight: bold; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; }
         .report-details { font-size: 11px; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
         .report-details div { background: #f8fafc; padding: 4px 6px; border-radius: 4px; }
+        .tab-btn { flex: 1; padding: 6px; border: 1px solid #cbd5e1; background: #e2e8f0; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .tab-btn.active { background: #2980b9; color: white; border-color: #2980b9; }
         @media print { body { background-color: #fff; padding: 0; } .no-print, .header, .stats-grid, .backup-section, .card:not(:nth-child(3)) { display: none !important; } #detailed-report-container { display: block !important; } .card { border: none; box-shadow: none; padding: 0; margin: 0; } }
     </style>
 </head>
@@ -65,33 +66,43 @@
         <input type="file" id="importFile" style="display:none" onchange="importDataFromFile(event)">
     </div>
 
-    <!-- لوحة التحكم الجماعي للشفتات الشاملة لكل السرية -->
+    <!-- لوحة التحكم الجماعي للشفتات الجماعية لعموم السرية -->
     <div class="card no-print" style="background: #eef2f5; border: 1px solid #cbd5e1;">
         <div class="card-title" style="color: #2c3e50; margin-bottom: 8px;">إدارة الشفتات الجماعية لعموم السرية</div>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div class="form-group" style="margin-bottom:0;">
                 <label style="font-size:12px;">اختر الشفت لتعديل حالته لعموم السرية:</label>
-                <select id="global-shift-select" style="font-size:12px; padding:6px; background:white;">
+                <select id="global-shift-select" style="font-size:12px; padding:6px; background:white;" onchange="onGlobalShiftChange()">
                     <option value="الشفت الأول">الشفت الأول</option>
                     <option value="الشفت الثاني">الشفت الثاني</option>
                     <option value="الشفت الثالث">الشفت الثالث</option>
                     <option value="دوام إداري">دوام إداري</option>
                 </select>
             </div>
+            
+            <!-- صندوق تواريخ الإجازة الجماعية (يظهر فقط عند الضغط على زر تحويل إجازة) -->
+            <div id="global-dates-container" style="display: none; background: white; padding: 8px; border-radius: 4px; border: 1px solid #cbd5e1;">
+                <div class="form-group">
+                    <label>تاريخ ووقت النزول (بداية الإجازة الجماعية):</label>
+                    <div style="display:flex; gap:4px;">
+                        <input type="date" id="global-date-down" style="flex:2;">
+                        <input type="time" id="global-time-down" style="flex:1;" value="16:00">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>تاريخ ووقت العودة (نهاية الإجازة الجماعية):</label>
+                    <div style="display:flex; gap:4px;">
+                        <input type="date" id="global-date-up" style="flex:2;">
+                        <input type="time" id="global-time-up" style="flex:1;" value="16:00">
+                    </div>
+                </div>
+            </div>
+
             <div style="display:flex; gap:8px;">
                 <button type="button" class="action-btn" style="background:#27ae60; font-size:11px; padding:8px; flex:1;" onclick="setGlobalShiftStatus('موجود')">تحويل الشفت موجود (للكل)</button>
-                <button type="button" class="action-btn" style="background:#2980b9; font-size:11px; padding:8px; flex:1;" onclick="setGlobalShiftStatus('إجازة رسمية')">تحويل الشفت إجازة (للكل)</button>
+                <button type="button" class="action-btn" style="background:#2980b9; font-size:11px; padding:8px; flex:1;" onclick="prepareGlobalLeave()">تحويل الشفت إجازة (تحديد تواريخ)</button>
             </div>
         </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card" style="border-color: #3498db;"><h3>القوة الكلية</h3><div class="number" id="st-total">0</div></div>
-        <div class="stat-card" style="border-color: #27ae60;"><h3>الموجود</h3><div class="number" id="st-present">0</div></div>
-        <div class="stat-card" style="border-color: #2980b9;"><h3>الإجازات</h3><div class="number" id="st-leave">0</div></div>
-        <div class="stat-card" style="border-color: #f39c12;"><h3>المأذونيات</h3><div class="number" id="st-perm">0</div></div>
-        <div class="stat-card" style="border-color: #8e44ad;"><h3>المرضيات</h3><div class="number" id="st-sick">0</div></div>
-        <div class="stat-card" style="border-color: #c0392b;"><h3>الغياب/الفرار</h3><div class="number" id="st-absent">0</div></div>
     </div>
 
     <div class="card">
@@ -116,15 +127,27 @@
             <div class="form-group"><label>إلى تاريخ:</label><input type="date" id="history-end-date" onchange="renderDetailedReport()"></div>
         </div>
         <div id="loc-stats-section" style="margin-top: 15px; margin-bottom: 15px;">
-            <h4 style="font-size: 12px; color: #2c3e50; margin-bottom: 5px;">إحصائيات القيادة والمواكب:</h4>
+            <h4 style="font-size: 12px; color: #2c3e50; margin-bottom: 5px;">إحصائيات قوة السرية الكلي:</h4>
             <div style="overflow-x:auto;"><table class="loc-table"><thead><tr><th>الموقع</th><th>التصنيف</th><th>القوة</th><th>موجود</th><th>إجازة</th><th>مأذونية</th><th>مرضية</th><th>غياب</th><th>فرار</th></tr></thead><tbody id="locations-stats-body"></tbody></table></div>
         </div>
+        
+        <div class="stats-grid" style="margin-top: 15px; margin-bottom: 0;">
+            <div class="stat-card" style="border-color: #3498db;"><h3>القوة الكلية</h3><div class="number" id="st-total">0</div></div>
+            <div class="stat-card" style="border-color: #27ae60;"><h3>الموجود</h3><div class="number" id="st-present">0</div></div>
+            <div class="stat-card" style="border-color: #2980b9;"><h3>الإجازات</h3><div class="number" id="st-leave">0</div></div>
+            <div class="stat-card" style="border-color: #f39c12;"><h3>المأذونيات</h3><div class="number" id="st-perm">0</div></div>
+            <div class="stat-card" style="border-color: #8e44ad;"><h3>المرضيات</h3><div class="number" id="st-sick">0</div></div>
+            <div class="stat-card" style="border-color: #c0392b;"><h3>الغياب/الفرار</h3><div class="number" id="st-absent">0</div></div>
+        </div>
+
         <div style="margin-top: 10px; display: none;" id="detailed-report-container"></div>
     </div>
 
     <div class="card no-print">
-        <div class="card-title">المواقع والأزرار<button class="action-btn" style="width: auto; padding: 4px 10px;" onclick="toggleAddLocation()">+ إضافة موقع أو قيادة</button></div>
-        <div id="add-loc-box" style="display:none; background:#eef2f5; padding:10px; border-radius:4px; margin-bottom:10px;">
+        <div class="card-title">المواقع والأزرار<button type="button" class="action-btn" style="width: auto; padding: 4px 10px;" onclick="toggleAddLocation()">+ إضافة موقع أو قيادة</button></div>
+        
+        <!-- نموذج إضافة أو تعديل موقع -->
+        <div id="add-loc-box" style="display:none; background:#eef2f5; padding:10px; border-radius:4px; margin-bottom:10px; border:1px solid #cbd5e1;">
             <input type="hidden" id="edit-loc-id" value="">
             <div class="form-group"><label>اسم الموقع:</label><input type="text" id="new-loc-name"></div>
             <div class="form-group"><label>التصنيف:</label><select id="new-loc-platoon"><option value="قيادة">قيادة</option><option value="الفصيلة الأولى">الفصيلة الأولى</option><option value="الفصيلة الثانية">الفصيلة الثانية</option><option value="الفصيلة الثالثة">الفصيلة الثالثة</option></select></div>
@@ -132,30 +155,123 @@
             <div class="form-group"><label>عدد الشفت الأول:</label><input type="number" id="new-loc-shift1" value="0"></div>
             <div class="form-group"><label>عدد الشفت الثاني:</label><input type="number" id="new-loc-shift2" value="0"></div>
             <div class="form-group"><label>عدد الشفت الثالث:</label><input type="number" id="new-loc-shift3" value="0"></div>
-            <button type="button" class="action-btn" id="save-loc-btn" onclick="saveNewLocation()">حفظ وتحديث</button>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+                <button type="button" class="action-btn" style="background:#27ae60; flex:1;" id="save-loc-btn" onclick="saveNewLocation()">حفظ وتحديث</button>
+                <button type="button" class="action-btn" style="background:#64748b; flex:1;" onclick="toggleAddLocation()">إلغاء</button>
+            </div>
         </div>
+
+        <!-- نموذج تسجيل أو تعديل فرد -->
         <div id="add-mem-modal" style="display:none; background:#eef2f7; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #cbd5e1;">
-            <h4 style="font-size:13px; margin-bottom:6px;" id="modal-title-text">تسجيل فرد جديد</h4>
+            <h4 style="font-size:13px; margin-bottom:8px;" id="modal-title-text">تسجيل أفراد</h4>
+            <div id="tabs-container" style="display:flex; margin-bottom:10px; border-radius:4px; overflow:hidden;">
+                <button type="button" id="tab-single-btn" class="tab-btn active" onclick="switchMemberInputMode('single')">فرد واحد</button>
+                <button type="button" id="tab-bulk-btn" class="tab-btn" onclick="switchMemberInputMode('bulk')">📋 دفعة أسماء (متعدد)</button>
+            </div>
+            
             <input type="hidden" id="modal-loc-target" value=""><input type="hidden" id="edit-mem-id" value="">
-            <div class="form-group"><label>الرتبة:</label><input type="text" id="modal-mem-rank"></div>
-            <div class="form-group"><label>اسم الفرد الكامل:</label><input type="text" id="modal-mem-name"></div>
+            
+            <div class="form-group"><label>الرتبة:</label><input type="text" id="modal-mem-rank" placeholder="مثال: جندي"></div>
+            
+            <!-- إدخال فرد واحد -->
+            <div id="single-name-group" class="form-group">
+                <label>اسم الفرد الكامل:</label>
+                <input type="text" id="modal-mem-name">
+            </div>
+
+            <!-- إدخال متعدد -->
+            <div id="bulk-names-group" class="form-group" style="display:none;">
+                <label>اكتب/الصق الأسماء (اسم واحد في كل سطر):</label>
+                <textarea id="modal-bulk-names" rows="5" placeholder="أحمد محمد سالم&#10;علي عبدالكريم&#10;سعيد سعيد عمر"></textarea>
+            </div>
+
             <div class="form-group"><label>العمل:</label><input type="text" id="modal-mem-job"></div>
             <div class="form-group"><label>رقم الجوال:</label><input type="text" id="modal-mem-phone"></div>
             <div class="form-group"><label>الشفت:</label><select id="modal-mem-shift"><option>الشفت الأول</option><option>الشفت الثاني</option><option>الشفت الثالث</option><option>دوام إداري</option></select></div>
-            <div class="form-group"><label>الحالة:</label><select id="modal-mem-status"><option value="موجود">موجود</option><option value="إجازة رسمية">إجازة رسمية</option><option value="مأذونية">مأذونية</option><option value="مرضية">مرضية</option><option value="غياب">غياب</option><option value="فرار">فرار</option></select></div>
+            
+            <div class="form-group">
+                <label>الحالة:</label>
+                <select id="modal-mem-status" onchange="toggleDateFields()">
+                    <option value="موجود">موجود</option>
+                    <option value="إجازة رسمية">إجازة رسمية</option>
+                    <option value="مأذونية">مأذونية</option>
+                    <option value="مرضية">مرضية</option>
+                    <option value="غياب">غياب</option>
+                    <option value="فرار">فرار</option>
+                </select>
+            </div>
+            
+            <!-- حقول تواريخ النزول والعودة مع الوقت للأفراد -->
+            <div id="status-dates-group" style="display: none; background: #fafafa; padding: 8px; border-radius: 4px; border: 1px solid #dfe6e9; margin-bottom: 8px;">
+                <div class="form-group">
+                    <label>تاريخ ووقت النزول:</label>
+                    <div style="display:flex; gap:4px;">
+                        <input type="date" id="modal-date-down" style="flex:2;">
+                        <input type="time" id="modal-time-down" style="flex:1;" value="16:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ ووقت العودة:</label>
+                    <div style="display:flex; gap:4px;">
+                        <input type="date" id="modal-date-up" style="flex:2;">
+                        <input type="time" id="modal-time-up" style="flex:1;" value="16:00">
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group"><label>تاريخ الحالة:</label><input type="date" id="modal-mem-date"></div>
             <div class="form-group"><label>السبب / الملاحظة:</label><textarea id="modal-mem-reason" rows="2"></textarea></div>
-            <div style="display:flex; gap:6px;"><button type="button" class="action-btn" style="background:#27ae60; flex:1;" onclick="saveModalMember()">حفظ</button><button type="button" class="action-btn" style="background:#64748b; flex:1;" onclick="closeModalMember()">إلغاء</button></div>
+            <div style="display:flex; gap:6px;">
+                <button type="button" class="action-btn" style="background:#27ae60; flex:1;" onclick="saveModalMember()">حفظ وتحديث</button>
+                <button type="button" class="action-btn" style="background:#64748b; flex:1;" onclick="closeModalMember()">إلغاء</button>
+            </div>
         </div>
+
         <div id="sites-buttons-container"></div>
     </div>
 
     <script>
-        let locations = JSON.parse(localStorage.getItem('sec_hybrid_locs_v2')) || [];
-        let members = JSON.parse(localStorage.getItem('sec_hybrid_mems_v2')) || [];
-        let historyLogs = JSON.parse(localStorage.getItem('sec_hybrid_logs_v2')) || [];
-        // تخزين حالة الشفتات الجماعية لكل موقع إذا لم تسجل أسماء
-        let globalShiftStatuses = JSON.parse(localStorage.getItem('sec_hybrid_global_shifts_v2')) || {};
+        function loadSafely(key) {
+            try {
+                let data = null;
+                for (let v of ['v25', 'v24', 'v23', 'v22', 'v21', 'v20', 'v19', 'v18', 'v17', 'v16', 'v15', 'v14', 'v13', 'v12', 'v11', 'v10', 'v9', 'v8', 'v7', 'v6', 'v5', 'v4', 'v3', 'v2', 'v1', '']) {
+                    let fullKey = v ? `sec_hybrid_${key}_${v}` : `sec_hybrid_${key}`;
+                    let val = localStorage.getItem(fullKey);
+                    if (val) {
+                        let parsed = JSON.parse(val);
+                        if ((Array.isArray(parsed) && parsed.length > 0) || (typeof parsed === 'object' && Object.keys(parsed).length > 0)) {
+                            data = parsed;
+                            break;
+                        }
+                    }
+                }
+                if (!data) {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        let k = localStorage.key(i);
+                        if (k && k.includes(`sec_hybrid_${key}`)) {
+                            let val = localStorage.getItem(k);
+                            if (val) {
+                                let parsed = JSON.parse(val);
+                                if ((Array.isArray(parsed) && parsed.length > 0) || (typeof parsed === 'object' && Object.keys(parsed).length > 0)) {
+                                    data = parsed;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                return data;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        let locations = loadSafely('locs') || [];
+        let members = loadSafely('mems') || [];
+        let historyLogs = loadSafely('logs') || [];
+        let globalShiftStatuses = loadSafely('global_shifts') || {};
+        let globalShiftSchedules = loadSafely('global_schedules') || {};
+        let currentMemberMode = 'single';
         
         const platoonOrder = { 'قيادة': 1, 'الفصيلة الأولى': 2, 'الفصيلة الثانية': 3, 'الفصيلة الثالثة': 4 };
 
@@ -169,14 +285,54 @@
         }
 
         function saveData() { 
-            localStorage.setItem('sec_hybrid_locs_v2', JSON.stringify(locations)); 
-            localStorage.setItem('sec_hybrid_mems_v2', JSON.stringify(members)); 
-            localStorage.setItem('sec_hybrid_logs_v2', JSON.stringify(historyLogs)); 
-            localStorage.setItem('sec_hybrid_global_shifts_v2', JSON.stringify(globalShiftStatuses));
+            localStorage.setItem('sec_hybrid_locs_v25', JSON.stringify(locations)); 
+            localStorage.setItem('sec_hybrid_mems_v25', JSON.stringify(members)); 
+            localStorage.setItem('sec_hybrid_logs_v25', JSON.stringify(historyLogs)); 
+            localStorage.setItem('sec_hybrid_global_shifts_v25', JSON.stringify(globalShiftStatuses));
+            localStorage.setItem('sec_hybrid_global_schedules_v25', JSON.stringify(globalShiftSchedules));
+        }
+
+        function checkAutomaticReturn() {
+            let now = new Date();
+            let changed = false;
+            
+            members.forEach(m => {
+                if ((m.status === 'إجازة رسمية' || m.status === 'مأذونية' || m.status === 'مرضية') && m.dateUp) {
+                    let upDateTimeStr = m.dateUp + 'T' + (m.timeUp || '23:59:00');
+                    let upDateObj = new Date(upDateTimeStr);
+                    if (now >= upDateObj) {
+                        m.status = 'موجود';
+                        m.dateDown = ''; m.timeDown = '';
+                        m.dateUp = ''; m.timeUp = '';
+                        changed = true;
+                    }
+                }
+            });
+
+            for (let locName in globalShiftSchedules) {
+                for (let shiftName in globalShiftSchedules[locName]) {
+                    let sch = globalShiftSchedules[locName][shiftName];
+                    if (sch && sch.status === 'إجازة رسمية' && sch.dateUp) {
+                        let upDateTimeStr = sch.dateUp + 'T' + (sch.timeUp || '23:59:00');
+                        let upDateObj = new Date(upDateTimeStr);
+                        if (now >= upDateObj) {
+                            if (globalShiftStatuses[locName]) {
+                                globalShiftStatuses[locName][shiftName] = 'موجود';
+                            }
+                            delete globalShiftSchedules[locName][shiftName];
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            
+            if (changed) {
+                saveData();
+            }
         }
 
         function exportDataToFile() { 
-            const data = { locations, members, historyLogs, globalShiftStatuses }; 
+            const data = { locations, members, historyLogs, globalShiftStatuses, globalShiftSchedules }; 
             const jsonStr = JSON.stringify(data, null, 2); 
             const blob = new Blob([jsonStr], { type: "application/json" }); 
             const url = URL.createObjectURL(blob); 
@@ -193,10 +349,11 @@
             reader.onload = function(e) { 
                 try { 
                     const data = JSON.parse(e.target.result); 
-                    locations = data.locations; 
-                    members = data.members; 
+                    locations = data.locations || []; 
+                    members = data.members || []; 
                     historyLogs = data.historyLogs || []; 
                     globalShiftStatuses = data.globalShiftStatuses || {};
+                    globalShiftSchedules = data.globalShiftSchedules || {};
                     saveData(); 
                     refreshAll(); 
                     alert("تم الاسترجاع بنجاح!"); 
@@ -212,7 +369,6 @@
             window.print(); 
         }
 
-        // دالة الحساب الدقيق التي تدمج أعداد الشفتات مع الحالات حتى بدون تسجيل أسماء
         function getCalculatedCounts(locName) { 
             const loc = locations.find(l => l.name === locName); 
             if (!loc) return { p:0, l:0, m:0, s:0, a:0, r:0 }; 
@@ -228,9 +384,7 @@
             let aCount = locMems.filter(m => m.status === 'غياب').length; 
             let rCount = locMems.filter(m => m.status === 'فرار').length; 
             let leaveCount = locMems.filter(m => m.status === 'إجازة رسمية').length; 
-            let presentCount = locMems.filter(m => m.status === 'موجود').length;
 
-            // فحص حالة الشفتات الجماعية المخزنة لهذا الموقع إذا لم تسجل أسماء
             let locShiftsStatus = globalShiftStatuses[locName] || {};
             
             let shift1Leave = (locShiftsStatus['الشفت الأول'] === 'إجازة رسمية') ? s1 : 0;
@@ -238,7 +392,6 @@
             let shift3Leave = (locShiftsStatus['الشفت الثالث'] === 'إجازة رسمية') ? s3 : 0;
             
             let totalLeaveFromShifts = shift1Leave + shift2Leave + shift3Leave;
-            
             let finalLeave = leaveCount > 0 ? leaveCount : totalLeaveFromShifts;
             let totalShift = s1 + s2 + s3;
 
@@ -246,7 +399,6 @@
             if (finalPresent < 0) finalPresent = 0;
 
             if (locMems.length > 0) {
-                // إذا وُجدت أسماء، نعتمد الحساب الدقيق بناءً على الأسماء والحالات المحددة
                 let explicitLeave = locMems.filter(m => m.status === 'إجازة رسمية').length;
                 let explicitPresent = locMems.filter(m => m.status === 'موجود').length;
                 finalLeave = explicitLeave;
@@ -306,7 +458,7 @@
                 box.className = 'site-box'; 
                 const boxId = `names-loc-${loc.id}`; 
                 const menuId = `menu-${loc.id}`; 
-                box.innerHTML = `<div class="site-header"><span>${loc.name} <small>(${loc.platoon})</small></span><div style="display:flex; align-items:center; gap:8px;"><span>قوة: ${loc.totalForce}</span><div class="menu-container"><button type="button" class="menu-btn" onclick="toggleMenu('${menuId}')">⋮</button><div id="${menuId}" class="dropdown-menu"><button type="button" class="members-opt" onclick="toggleSiteMembers('${boxId}', '${loc.name}')">👥 إدارة الأسماء</button><button type="button" class="add-mem-opt" onclick="openAddMemberModal('${loc.name}')">➕ إضافة فرد</button><button type="button" class="edit-opt" onclick="editLocation(${loc.id})">✏️ تعديل الموقع</button><button type="button" class="del-opt" onclick="deleteLocation(${loc.id})">🗑️ حذف الموقع</button></div></div></div></div><div class="status-buttons"><button type="button" class="st-btn btn-p" onclick="showStatusNames('${boxId}', '${loc.name}', 'موجود')">موجود (${c.p})</button><button type="button" class="st-btn btn-l" onclick="showStatusNames('${boxId}', '${loc.name}', 'إجازة رسمية')">إجازة (${c.l})</button><button type="button" class="st-btn btn-m" onclick="showStatusNames('${boxId}', '${loc.name}', 'مأذونية')">مأذونية (${c.m})</button><button type="button" class="st-btn btn-s" onclick="showStatusNames('${boxId}', '${loc.name}', 'مرضية')">مرضية (${c.s})</button><button type="button" class="st-btn btn-a" onclick="showStatusNames('${boxId}', '${loc.name}', 'غياب')">غياب (${c.a})</button><button type="button" class="st-btn btn-r" onclick="showStatusNames('${boxId}', '${loc.name}', 'فرار')">فرار (${c.r})</button></div><div id="${boxId}" class="names-display"></div>`; 
+                box.innerHTML = `<div class="site-header"><span>${loc.name} <small>(${loc.platoon})</small></span><div style="display:flex; align-items:center; gap:8px;"><span>قوة: ${loc.totalForce}</span><div class="menu-container"><button type="button" class="menu-btn" onclick="toggleMenu('${menuId}')">⋮</button><div id="${menuId}" class="dropdown-menu"><button type="button" class="members-opt" onclick="toggleSiteMembers('${boxId}', '${loc.name}')">👥 إدارة الأسماء</button><button type="button" class="add-mem-opt" onclick="openAddMemberModal('${loc.name}')">➕ إضافة فرد/دفعة</button><button type="button" class="edit-opt" onclick="editLocation(${loc.id})">✏️ تعديل الموقع</button><button type="button" class="del-opt" onclick="deleteLocation(${loc.id})">🗑️ حذف الموقع</button></div></div></div></div><div class="status-buttons"><button type="button" class="st-btn btn-p" onclick="showStatusNames('${boxId}', '${loc.name}', 'موجود')">موجود (${c.p})</button><button type="button" class="st-btn btn-l" onclick="showStatusNames('${boxId}', '${loc.name}', 'إجازة رسمية')">إجازة (${c.l})</button><button type="button" class="st-btn btn-m" onclick="showStatusNames('${boxId}', '${loc.name}', 'مأذونية')">مأذونية (${c.m})</button><button type="button" class="st-btn btn-s" onclick="showStatusNames('${boxId}', '${loc.name}', 'مرضية')">مرضية (${c.s})</button><button type="button" class="st-btn btn-a" onclick="showStatusNames('${boxId}', '${loc.name}', 'غياب')">غياب (${c.a})</button><button type="button" class="st-btn btn-r" onclick="showStatusNames('${boxId}', '${loc.name}', 'فرار')">فرار (${c.r})</button></div><div id="${boxId}" class="names-display"></div>`; 
                 container.appendChild(box); 
             }); 
         }
@@ -327,28 +479,65 @@
             } 
         }
 
-        // دالة تحويل الشفت لعموم السرية وتحديث الحالات فوراً حتى بدون أسماء
+        // حفظ الشفت المحدد في الذاكرة ليبقى ظاهراً عند العودة
+        function onGlobalShiftChange() {
+            const shiftVal = document.getElementById('global-shift-select').value;
+            localStorage.setItem('sec_hybrid_last_selected_shift', shiftVal);
+        }
+
+        // إظهار أو إخفاء صندوق التواريخ عند الضغط على زر تحويل الشفت إجازة
+        function prepareGlobalLeave() {
+            let datesContainer = document.getElementById('global-dates-container');
+            if (datesContainer.style.display === 'none' || datesContainer.style.display === '') {
+                datesContainer.style.display = 'block';
+            } else {
+                setGlobalShiftStatus('إجازة رسمية');
+            }
+        }
+
         function setGlobalShiftStatus(newStatus) {
             const shiftVal = document.getElementById('global-shift-select').value;
-            
-            // تحديث حالة الشفت لكل موقع في الذاكرة الجماعية
+            let dateDown = document.getElementById('global-date-down').value;
+            let timeDown = document.getElementById('global-time-down').value;
+            let dateUp = document.getElementById('global-date-up').value;
+            let timeUp = document.getElementById('global-time-up').value;
+
+            localStorage.setItem('sec_hybrid_last_selected_shift', shiftVal);
+
             locations.forEach(loc => {
                 if (!globalShiftStatuses[loc.name]) {
                     globalShiftStatuses[loc.name] = {};
                 }
                 globalShiftStatuses[loc.name][shiftVal] = newStatus;
+
+                if (newStatus === 'إجازة رسمية' && dateUp) {
+                    if (!globalShiftSchedules[loc.name]) globalShiftSchedules[loc.name] = {};
+                    globalShiftSchedules[loc.name][shiftVal] = { status: newStatus, dateDown, timeDown, dateUp, timeUp };
+                } else {
+                    if (globalShiftSchedules[loc.name]) {
+                        delete globalShiftSchedules[loc.name][shiftVal];
+                    }
+                }
             });
 
-            // وتحديث الأفراد المسجلين إن وجدوا
             members.forEach(m => {
                 if (m.shift === shiftVal) {
                     m.status = newStatus;
+                    if (newStatus === 'إجازة رسمية') {
+                        m.dateDown = dateDown; m.timeDown = timeDown;
+                        m.dateUp = dateUp; m.timeUp = timeUp;
+                    } else {
+                        m.dateDown = ''; m.timeDown = '';
+                        m.dateUp = ''; m.timeUp = '';
+                    }
                 }
             });
-            
+
             saveData();
             refreshAll();
-            alert(`تم بنجاح تحويل حالة أفراد (${shiftVal}) في عموم السرية إلى (${newStatus})!`);
+            
+            document.getElementById('global-dates-container').style.display = 'none';
+            alert(`تم بنجاح تحديث حالة أفراد (${shiftVal}) في عموم السرية إلى (${newStatus})!`);
         }
 
         function toggleSiteMembers(boxId, locName) { 
@@ -359,12 +548,18 @@
             let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><b>إدارة أفراد (${locName})</b><button type="button" class="action-btn" style="background:#27ae60;" onclick="openAddMemberModal('${locName}')">➕ جديد</button></div>`; 
             
             if (locMembers.length === 0) { 
-                html += `<p style="color:#7f8c8d;">لا توجد أسماء مسجلة بعد (البيانات محسوبة تلقائياً من الشفتات)</p>`; 
+                html += `<p style="color:#7f8c8d;">لا توجد أسماء مسجلة بعد</p>`; 
             } else { 
                 html += `<ul>`; 
                 locMembers.forEach(m => { 
-                    let recallBtnHtml = (m.status === 'إجازة رسمية') ? `<button type="button" class="recall-btn" onclick="recallFromLeave(${m.id}, '${boxId}', '${locName}')">استدعاء</button>` : ''; 
-                    html += `<li><b>[${m.rank}] ${m.name}</b> (${m.shift}) - ${m.status}<br><small>${m.job} | ${m.phone}</small>
+                    let datesInfo = '';
+                    if ((m.status === 'إجازة رسمية' || m.status === 'مأذونية' || m.status === 'مرضية') && (m.dateDown || m.dateUp)) {
+                        let downStr = (m.dateDown || '---') + (m.timeDown ? ' (' + m.timeDown + ')' : '');
+                        let upStr = (m.dateUp || '---') + (m.timeUp ? ' (' + m.timeUp + ')' : '');
+                        datesInfo = `<br><small style="color:#d35400;">النزول: ${downStr} | العودة: ${upStr}</small>`;
+                    }
+
+                    html += `<li><b style="font-size:13px; color:#1e293b;">${m.name}</b> <small style="color:#64748b;">[${m.rank}]</small><br><small style="color:#0284c7;">${m.shift} - ${m.status}</small>${datesInfo}<br><small style="color:#475569;">${m.job} | ${m.phone}</small>
                         <div style="display:flex; gap:4px; margin-top:6px; align-items:center; flex-wrap:wrap;">
                             <select onchange="updateMemberStatusInline(${m.id}, this.value, '${boxId}', '${locName}')" style="font-size:11px; padding:3px;">
                                 <option ${m.status==='موجود'?'selected':''}>موجود</option>
@@ -374,9 +569,8 @@
                                 <option ${m.status==='غياب'?'selected':''}>غياب</option>
                                 <option ${m.status==='فرار'?'selected':''}>فرار</option>
                             </select>
-                            ${recallBtnHtml}
                             <input type="text" value="${m.reason || ''}" placeholder="اكتب ملاحظة..." style="font-size:11px; padding:3px; flex:1; min-width:100px; border:1px solid #ccc; border-radius:3px;" onchange="updateMemberReasonInline(${m.id}, this.value)">
-                            <button type="button" class="action-btn" onclick="openEditMemberModal(${m.id})">✏️</button>
+                            <button type="button" class="action-btn" style="background:#2980b9;" onclick="openEditMemberModal(${m.id})">✏️ تعديل</button>
                             <button type="button" class="del-btn" onclick="deleteMember(${m.id}, '${boxId}', '${locName}')">حذف</button>
                         </div>
                     </li>`; 
@@ -392,13 +586,17 @@
             const todayStr = new Date().toISOString().split('T')[0]; 
             if (m) { 
                 m.status = newStatus; 
+                if (newStatus === 'إجازة رسمية' || newStatus === 'مأذونية' || newStatus === 'مرضية') {
+                    saveData();
+                    openEditMemberModal(id);
+                    return;
+                }
+
                 if (newStatus !== 'إجازة رسمية') { 
                     historyLogs.push({ id: m.id, name: m.name, rank: m.rank, status: newStatus, date: todayStr, reason: m.reason || 'تحديث' }); 
                 } 
                 saveData(); 
-                updateCompanyStats(); 
-                renderLocationsTable(); 
-                renderSiteButtons(); 
+                refreshAll(); 
                 toggleSiteMembers(boxId, locName); 
                 document.getElementById(boxId).style.display = 'block'; 
             } 
@@ -413,7 +611,7 @@
         }
 
         function deleteMember(id, boxId, locName) { 
-            if (confirm('حذف؟')) { 
+            if (confirm('حذف الفرد؟')) { 
                 members = members.filter(m => m.id !== id); 
                 saveData(); 
                 refreshAll(); 
@@ -430,42 +628,95 @@
             if (locMembers.length > 0) { 
                 locMembers.forEach(m => { 
                     let reasonDisplay = m.reason ? `<br><small style="color: #d35400;">ملاحظة: ${m.reason}</small>` : '';
-                    html += `<li><b>- [${m.rank}] ${m.name}</b> (${m.shift})<br><small>${m.job} | ${m.phone}</small>${reasonDisplay}</li>`; 
+                    let datesDisplay = '';
+                    if ((m.status === 'إجازة رسمية' || m.status === 'مأذونية' || m.status === 'مرضية') && (m.dateDown || m.dateUp)) {
+                        let downStr = (m.dateDown || '---') + (m.timeDown ? ' (' + m.timeDown + ')' : '');
+                        let upStr = (m.dateUp || '---') + (m.timeUp ? ' (' + m.timeUp + ')' : '');
+                        datesDisplay = `<br><small style="color: #2980b9;">النزول: ${downStr} | العودة: ${upStr}</small>`;
+                    }
+                    html += `<li><b>- ${m.name}</b> [${m.rank}] (${m.shift})<br><small>${m.job} | ${m.phone}</small>${datesDisplay}${reasonDisplay}</li>`; 
                 }); 
             } else { 
-                html += `<li><small>لا توجد أسماء مسجلة تفصيلياً (العدد محسوب تلقائياً من أعداد الشفتات)</small></li>`; 
+                html += `<li><small>لا توجد أسماء مسجلة تفصيلياً</small></li>`; 
             } 
             html += `</ul><button type="button" class="action-btn" style="background:#64748b; width:100%;" onclick="document.getElementById('${boxId}').style.display='none'">إغلاق</button>`; 
             displayDiv.innerHTML = html; 
         }
 
+        function switchMemberInputMode(mode) {
+            currentMemberMode = mode;
+            if (mode === 'single') {
+                document.getElementById('tab-single-btn').className = 'tab-btn active';
+                document.getElementById('tab-bulk-btn').className = 'tab-btn';
+                document.getElementById('single-name-group').style.display = 'block';
+                document.getElementById('bulk-names-group').style.display = 'none';
+            } else {
+                document.getElementById('tab-single-btn').className = 'tab-btn';
+                document.getElementById('tab-bulk-btn').className = 'tab-btn active';
+                document.getElementById('single-name-group').style.display = 'none';
+                document.getElementById('bulk-names-group').style.display = 'block';
+            }
+        }
+
+        function toggleDateFields() {
+            const status = document.getElementById('modal-mem-status').value;
+            const datesGroup = document.getElementById('status-dates-group');
+            if (status === 'إجازة رسمية' || status === 'مأذونية' || status === 'مرضية') {
+                datesGroup.style.display = 'block';
+            } else {
+                datesGroup.style.display = 'none';
+            }
+        }
+
         function openAddMemberModal(locName) { 
-            document.getElementById('modal-title-text').innerText = `تسجيل فرد في: ${locName}`; 
+            document.getElementById('modal-title-text').innerText = `تسجيل أفراد في: ${locName}`; 
             document.getElementById('modal-loc-target').value = locName; 
             document.getElementById('edit-mem-id').value = ''; 
             document.getElementById('modal-mem-rank').value = ''; 
             document.getElementById('modal-mem-name').value = ''; 
+            document.getElementById('modal-bulk-names').value = ''; 
             document.getElementById('modal-mem-job').value = ''; 
             document.getElementById('modal-mem-phone').value = ''; 
             document.getElementById('modal-mem-reason').value = ''; 
             document.getElementById('modal-mem-date').value = new Date().toISOString().split('T')[0]; 
+            
+            document.getElementById('modal-mem-status').value = 'موجود';
+            document.getElementById('modal-date-down').value = '';
+            document.getElementById('modal-time-down').value = '16:00';
+            document.getElementById('modal-date-up').value = '';
+            document.getElementById('modal-time-up').value = '16:00';
+            document.getElementById('status-dates-group').style.display = 'none';
+            
+            document.getElementById('tabs-container').style.display = 'flex';
+            switchMemberInputMode('single');
             document.getElementById('add-mem-modal').style.display = 'block'; 
         }
 
         function openEditMemberModal(id) { 
             const m = members.find(x => x.id === id); 
             if (m) { 
-                document.getElementById('modal-title-text').innerText = `تعديل: ${m.name}`; 
+                document.getElementById('modal-title-text').innerText = `تعديل بيانات: ${m.name}`; 
                 document.getElementById('modal-loc-target').value = m.location; 
                 document.getElementById('edit-mem-id').value = m.id; 
-                document.getElementById('modal-mem-rank').value = m.rank; 
-                document.getElementById('modal-mem-name').value = m.name; 
+                document.getElementById('modal-mem-rank').value = m.rank || ''; 
+                document.getElementById('modal-mem-name').value = m.name || ''; 
                 document.getElementById('modal-mem-job').value = m.job || ''; 
                 document.getElementById('modal-mem-phone').value = m.phone || ''; 
-                document.getElementById('modal-mem-shift').value = m.shift; 
-                document.getElementById('modal-mem-status').value = m.status; 
+                document.getElementById('modal-mem-shift').value = m.shift || 'الشفت الأول'; 
+                document.getElementById('modal-mem-status').value = m.status || 'موجود'; 
                 document.getElementById('modal-mem-reason').value = m.reason || ''; 
                 document.getElementById('modal-mem-date').value = new Date().toISOString().split('T')[0]; 
+                
+                document.getElementById('modal-date-down').value = m.dateDown || '';
+                document.getElementById('modal-time-down').value = m.timeDown || '16:00';
+                document.getElementById('modal-date-up').value = m.dateUp || '';
+                document.getElementById('modal-time-up').value = m.timeUp || '16:00';
+                
+                toggleDateFields();
+                
+                document.getElementById('tabs-container').style.display = 'none';
+                switchMemberInputMode('single');
+                
                 document.getElementById('add-mem-modal').style.display = 'block'; 
             } 
         }
@@ -477,7 +728,6 @@
         function saveModalMember() { 
             const editId = document.getElementById('edit-mem-id').value; 
             const rank = document.getElementById('modal-mem-rank').value || 'عسكري'; 
-            const name = document.getElementById('modal-mem-name').value; 
             const job = document.getElementById('modal-mem-job').value; 
             const phone = document.getElementById('modal-mem-phone').value || 'غير مسجل'; 
             const location = document.getElementById('modal-loc-target').value; 
@@ -485,21 +735,46 @@
             const status = document.getElementById('modal-mem-status').value; 
             const reason = document.getElementById('modal-mem-reason').value; 
             const logDate = document.getElementById('modal-mem-date').value || new Date().toISOString().split('T')[0]; 
-            if (!name) { alert('الرجاء كتابة الاسم'); return; } 
-            let memberId; 
-            if (editId) { 
-                const m = members.find(x => x.id == editId); 
+
+            const dateDown = document.getElementById('modal-date-down').value;
+            const timeDown = document.getElementById('modal-time-down').value;
+            const dateUp = document.getElementById('modal-date-up').value;
+            const timeUp = document.getElementById('modal-time-up').value;
+
+            if (editId) {
+                const m = members.find(x => x.id == editId);
+                const name = document.getElementById('modal-mem-name').value;
+                if (!name) { alert('الرجاء كتابة الاسم'); return; }
                 if (m) { 
-                    m.rank = rank; m.name = name; m.job = job; m.phone = phone; m.shift = shift; m.status = status; m.reason = reason; 
-                    memberId = m.id; 
+                    m.rank = rank; m.name = name; m.job = job; m.phone = phone; 
+                    m.shift = shift; m.status = status; m.reason = reason; 
+                    m.dateDown = dateDown; m.timeDown = timeDown; 
+                    m.dateUp = dateUp; m.timeUp = timeUp;
+                }
+            } else if (currentMemberMode === 'bulk') {
+                const rawNames = document.getElementById('modal-bulk-names').value;
+                const namesList = rawNames.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+                
+                if (namesList.length === 0) { alert('الرجاء كتابة اسم واحد على الأقل في القائمة'); return; }
+
+                namesList.forEach((name, idx) => {
+                    let memberId = Date.now() + idx;
+                    members.push({ id: memberId, rank, name, job, phone, location, shift, status, reason, dateDown, timeDown, dateUp, timeUp });
+                    if (status !== 'إجازة رسمية') {
+                        historyLogs.push({ id: memberId, name: name, rank: rank, status: status, date: logDate, reason: reason || '' });
+                    }
+                });
+                alert(`تم تسجيل (${namesList.length}) أفراد بنجاح في موقع ${location}`);
+            } else {
+                const name = document.getElementById('modal-mem-name').value;
+                if (!name) { alert('الرجاء كتابة الاسم'); return; } 
+                let memberId = Date.now(); 
+                members.push({ id: memberId, rank, name, job, phone, location, shift, status, reason, dateDown, timeDown, dateUp, timeUp }); 
+                if (status !== 'إجازة رسمية') { 
+                    historyLogs.push({ id: memberId, name: name, rank: rank, status: status, date: logDate, reason: reason || '' }); 
                 } 
-            } else { 
-                memberId = Date.now(); 
-                members.push({ id: memberId, rank, name, job, phone, location, shift, status, reason }); 
-            } 
-            if (status !== 'إجازة رسمية') { 
-                historyLogs.push({ id: memberId, name: name, rank: rank, status: status, date: logDate, reason: reason || '' }); 
-            } 
+            }
+
             saveData(); 
             closeModalMember(); 
             refreshAll(); 
@@ -545,7 +820,7 @@
                 } 
                 let html = `<div style="background:#f1f5f9; padding:8px; border-radius:6px; margin-bottom:8px;"><b>سجل الفرد:</b> ${queryName}</div>`; 
                 filteredLogs.forEach(log => { 
-                    html += `<div class="report-card-item"><div class="report-name"><span>📅 ${log.date}</span><span>${log.status}</span></div><div class="report-details"><div><b>الاسم:</b> [${log.rank}] ${log.name}</div><div><b>السبب:</b> ${log.reason}</div></div></div>`; 
+                    html += `<div class="report-card-item"><div class="report-name"><span>📅 ${log.date}</span><span>${log.status}</span></div><div class="report-details"><div><b>الاسم:</b> ${log.name} [${log.rank}]</div><div><b>السبب:</b> ${log.reason}</div></div></div>`; 
                 }); 
                 container.innerHTML = html; 
                 return; 
@@ -556,7 +831,19 @@
 
         function toggleAddLocation() { 
             const box = document.getElementById('add-loc-box'); 
-            box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none'; 
+            if (box.style.display === 'none' || box.style.display === '') {
+                document.getElementById('edit-loc-id').value = ''; 
+                document.getElementById('new-loc-name').value = ''; 
+                document.getElementById('new-loc-platoon').value = 'قيادة'; 
+                document.getElementById('new-loc-total').value = '0'; 
+                document.getElementById('new-loc-shift1').value = '0'; 
+                document.getElementById('new-loc-shift2').value = '0'; 
+                document.getElementById('new-loc-shift3').value = '0'; 
+                document.getElementById('save-loc-btn').innerText = 'حفظ وتحديث';
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
         }
 
         function editLocation(id) { 
@@ -581,6 +868,7 @@
                     members = members.filter(m => m.location !== loc.name); 
                     locations = locations.filter(l => l.id !== id); 
                     delete globalShiftStatuses[loc.name];
+                    delete globalShiftSchedules[loc.name];
                     saveData(); 
                     refreshAll(); 
                 } 
@@ -611,27 +899,38 @@
             } else { 
                 locations.push({ id: Date.now(), name, platoon, totalForce, shift1, shift2, shift3 }); 
             } 
+            
+            document.getElementById('edit-loc-id').value = '';
+            document.getElementById('new-loc-name').value = '';
+            document.getElementById('new-loc-total').value = '0';
+            document.getElementById('new-loc-shift1').value = '0';
+            document.getElementById('new-loc-shift2').value = '0';
+            document.getElementById('new-loc-shift3').value = '0';
+            document.getElementById('save-loc-btn').innerText = 'حفظ وتحديث';
+
             saveData(); 
             toggleAddLocation(); 
             refreshAll(); 
         }
 
         function refreshAll() { 
+            checkAutomaticReturn(); 
             updateCompanyStats(); 
             renderLocationsTable(); 
             renderSiteButtons(); 
         }
 
         window.onload = function() { 
+            let lastShift = localStorage.getItem('sec_hybrid_last_selected_shift');
+            if (lastShift) {
+                let shiftSelect = document.getElementById('global-shift-select');
+                if (shiftSelect) {
+                    shiftSelect.value = lastShift;
+                }
+            }
+            document.getElementById('global-dates-container').style.display = 'none';
             refreshAll(); 
         };
-    </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-      });
-    }
     </script>
 </body>
 </html>
