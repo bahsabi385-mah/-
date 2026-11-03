@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قوة حماية الشركات النفطية - المنطقة العسكرية الثانية</title>
     
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="icon" type="image/png" href="icon-192.png">
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -80,7 +76,7 @@
                 </select>
             </div>
             
-            <!-- صندوق تواريخ الإجازة الجماعية (يظهر فقط عند الضغط على زر تحويل إجازة) -->
+            <!-- صندوق تواريخ الإجازة الجماعية (مخفي افتراضياً ولا يظهر إلا عند الضغط على تحويل إجازة) -->
             <div id="global-dates-container" style="display: none; background: white; padding: 8px; border-radius: 4px; border: 1px solid #cbd5e1;">
                 <div class="form-group">
                     <label>تاريخ ووقت النزول (بداية الإجازة الجماعية):</label>
@@ -234,7 +230,7 @@
         function loadSafely(key) {
             try {
                 let data = null;
-                for (let v of ['v25', 'v24', 'v23', 'v22', 'v21', 'v20', 'v19', 'v18', 'v17', 'v16', 'v15', 'v14', 'v13', 'v12', 'v11', 'v10', 'v9', 'v8', 'v7', 'v6', 'v5', 'v4', 'v3', 'v2', 'v1', '']) {
+                for (let v of ['v30', 'v29', 'v28', 'v27', 'v26', 'v25', 'v24', 'v23', 'v22', 'v21', 'v20', 'v19', 'v18', 'v17', 'v16', 'v15', 'v14', 'v13', 'v12', 'v11', 'v10', 'v9', 'v8', 'v7', 'v6', 'v5', 'v4', 'v3', 'v2', 'v1', '']) {
                     let fullKey = v ? `sec_hybrid_${key}_${v}` : `sec_hybrid_${key}`;
                     let val = localStorage.getItem(fullKey);
                     if (val) {
@@ -285,11 +281,11 @@
         }
 
         function saveData() { 
-            localStorage.setItem('sec_hybrid_locs_v25', JSON.stringify(locations)); 
-            localStorage.setItem('sec_hybrid_mems_v25', JSON.stringify(members)); 
-            localStorage.setItem('sec_hybrid_logs_v25', JSON.stringify(historyLogs)); 
-            localStorage.setItem('sec_hybrid_global_shifts_v25', JSON.stringify(globalShiftStatuses));
-            localStorage.setItem('sec_hybrid_global_schedules_v25', JSON.stringify(globalShiftSchedules));
+            localStorage.setItem('sec_hybrid_locs_v30', JSON.stringify(locations)); 
+            localStorage.setItem('sec_hybrid_mems_v30', JSON.stringify(members)); 
+            localStorage.setItem('sec_hybrid_logs_v30', JSON.stringify(historyLogs)); 
+            localStorage.setItem('sec_hybrid_global_shifts_v30', JSON.stringify(globalShiftStatuses));
+            localStorage.setItem('sec_hybrid_global_schedules_v30', JSON.stringify(globalShiftSchedules));
         }
 
         function checkAutomaticReturn() {
@@ -479,13 +475,11 @@
             } 
         }
 
-        // حفظ الشفت المحدد في الذاكرة ليبقى ظاهراً عند العودة
         function onGlobalShiftChange() {
             const shiftVal = document.getElementById('global-shift-select').value;
             localStorage.setItem('sec_hybrid_last_selected_shift', shiftVal);
         }
 
-        // إظهار أو إخفاء صندوق التواريخ عند الضغط على زر تحويل الشفت إجازة
         function prepareGlobalLeave() {
             let datesContainer = document.getElementById('global-dates-container');
             if (datesContainer.style.display === 'none' || datesContainer.style.display === '') {
